@@ -14,3 +14,6 @@ models/stanford:
 
 fmt:
 	$(PIPENV_RUN) black $(SOURCE_FILES)
+
+train:
+	MODELS_PATH=stanford-models PYTHONPATH=src $(PIPENV_RUN) python training/main.py
