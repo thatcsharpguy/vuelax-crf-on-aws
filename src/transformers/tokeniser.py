@@ -2,10 +2,13 @@ from nltk import TweetTokenizer
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-class Tokeniser(TransformerMixin):
+class Tokeniser(BaseEstimator, TransformerMixin):
     def __init__(self, return_flags=False):
         self.tokeniser = TweetTokenizer()
         self.return_flags = return_flags
+
+    def fit(self, *args, **kwargs):
+        return self
 
     def tokenise(self, sequence):
         flag = ""

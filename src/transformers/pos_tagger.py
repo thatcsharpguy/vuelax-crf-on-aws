@@ -1,11 +1,12 @@
 from pathlib import Path
-
+import os
 from nltk import StanfordPOSTagger
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class POSTagger(BaseEstimator, TransformerMixin):
-    def __init__(self, models_path):
+    def __init__(self, models_path=None):
+        models_path = models_path or os.environ["MODELS_PATH"]
         jar_file = Path(models_path, "stanford-postagger.jar")
         tagger_file = Path(models_path, "spanish.tagger")
 
