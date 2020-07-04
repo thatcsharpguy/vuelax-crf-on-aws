@@ -1,7 +1,7 @@
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class FeaturiseCRF(TransformerMixin):
+class FeaturiseCRF(BaseEstimator, TransformerMixin):
     def __init__(
         self, feature_order, shared_features, surrounding_features=None, bias=True
     ):
@@ -9,6 +9,9 @@ class FeaturiseCRF(TransformerMixin):
         self.shared_features = shared_features
         self.surrounding_features = surrounding_features
         self.bias = bias
+
+    def fit(self, *args, **kwargs):
+        return self
 
     def featurise_entry(self, entry):
         def _featurise(entry, idx):
