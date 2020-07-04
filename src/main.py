@@ -1,29 +1,19 @@
-from collections import defaultdict
+import joblib
 
-import csv
 
-offer_id_tokens = defaultdict(list)
-with open("data/to_label-done.csv") as fd:
-    reader = csv.reader(fd)
-    next(reader)
-    for entry in reader:
-        offer_id_tokens[int(entry[0])].append(entry[4])
+pipeline = joblib.load("crf_pipeline.pkl")
 
-offers = []
-with open("data/vuelos.csv") as fd:
-    reader = csv.reader(fd)
-    next(reader)
-    for entry in reader:
-        offers.append(entry[1])
+offers = [
+    "¡CDMX a Santiago 🇨🇱 + Patagonia 🐧 $10,309!",
+    "¡CDMX a Ginebra, Suiza $13,832!",
+    "¡CDMX a San José, Costa Rica $4,382! 🐸 (Por $1,987 agrega 4 noches de hotel con desayunos)",
+]
 
-features = text.transform(offers[:10])
+tokens = pipeline.named_steps["tokeniser"].transform(offers)
+labels = pipeline.predict(offers)
 
-for idx, feats in enumerate(features):
-    if idx not in offer_id_tokens:
-        break
-    if len(feats) != len(offer_id_tokens[idx]):
-        import pdb
 
-        pdb.set_trace()
-        pass
-    assert len(feats) == len(offer_id_tokens[idx])
+for (token, position), label in zip(tokens, labels):
+    print(token)
+    print(label)
+    print()
