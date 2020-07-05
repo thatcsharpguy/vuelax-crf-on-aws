@@ -1,0 +1,33 @@
+# Get Linux
+FROM centos:7
+
+# Install Java
+RUN yum update -y \
+	&& yum install java-1.8.0-openjdk -y \
+	&& yum clean all \
+	&& rm -rf /var/cache/yum
+
+# Set JAVA_HOME environment var
+ENV JAVA_HOME="/usr/lib/jvm/jre-openjdk" \
+	LC_ALL=en_US.utf-8 \
+	LANG=en_US.utf-8
+
+# Install Python
+RUN yum install python3 -y \
+	&& pip3 install --upgrade pip setuptools wheel \
+	&& if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi \
+	&& if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi \
+	&& yum clean all \
+	&& rm -rf /var/cache/yum \
+	&& yum install which -y \
+	&& pip install pipenv
+
+WORKDIR app
+
+COPY stanford-models stanford-models
+
+COPY src Pipfile.lock Pipfile crf_pipeline.pkl ./
+
+RUN pipenv install --system --deploy --ignore-pipfile
+
+CMD ["python3", "main.py"]
