@@ -1,6 +1,6 @@
 from tagger import Tagger
 
-tagger = Tagger("crf_pipeline.pkl")
+tagger = Tagger("vuelax.pkl")
 
 offers = [
     "¡CDMX a Santiago 🇨🇱 + Patagonia 🐧 $10,309!",

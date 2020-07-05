@@ -26,7 +26,7 @@ WORKDIR app
 
 COPY stanford-models stanford-models
 
-COPY src Pipfile.lock Pipfile crf_pipeline.pkl ./
+COPY src Pipfile.lock Pipfile vuelax.pkl ./
 
 RUN pipenv install --system --deploy --ignore-pipfile
 
