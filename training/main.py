@@ -11,6 +11,8 @@ with open("./training/data/to_label-done.csv") as fd:
     reader = csv.reader(fd)
     next(reader)
     for entry in reader:
+        if not entry[4]:
+            continue
         offer_id_tokens[int(entry[0])].append(entry[4])
 
 all_offers = []
@@ -29,7 +31,6 @@ for offer_id, offer in enumerate(all_offers):
     labels.append(offer_id_tokens[offer_id])
 
 x_train, x_test, y_train, y_test = train_test_split(offers, labels)
-
 
 full_pipeline.fit(x_train, y_train)
 
