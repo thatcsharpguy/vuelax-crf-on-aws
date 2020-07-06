@@ -1,3 +1,7 @@
+from contextlib import contextmanager
+
+from models import Base
+from models.offer import Offer
 from tagger import Tagger
 
 tagger = Tagger("vuelax.pkl")
@@ -9,4 +13,27 @@ offers = [
 ]
 
 
-aaa = tagger.tag(offers)
+tags = tagger.tag(offers)
+
+
+from sqlalchemy import create_engine
+engine = create_engine('sqlite:///:memory:', echo=True)
+
+Base.metadata.create_all(engine)
+
+from sqlalchemy.orm import sessionmaker
+Session = sessionmaker(bind=engine)
+
+@contextmanager
+def get_sess():
+    sess = Session()
+    yield sess
+    sess.commit()
+
+with get_sess() as sess:
+    sess.add(Offer(text = offers[0], **tags[0]))
+
+with get_sess() as sess:
+    all = sess.query(Offer).all()
+    import pdb; pdb.set_trace()
+    pass
