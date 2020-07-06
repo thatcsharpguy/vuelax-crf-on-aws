@@ -7,15 +7,16 @@ verify_ssl = true
 black = ">18.*"
 isort = "*"
 pytest = "*"
+pytest-docker = "*"
 
 [packages]
-scikit-learn = "*"
+cryptography = "*"
 nltk = "*"
+pymysql = "*"
 python-crfsuite = "*"
+scikit-learn = "*"
 sklearn-crfsuite = "*"
 sqlalchemy = "*"
-pymysql = "*"
-cryptography = "*"
 
 [requires]
 python_version = "3.6"

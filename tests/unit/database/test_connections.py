@@ -6,10 +6,10 @@ from database.connections import get_connection_url
 
 
 @pytest.fixture
-def environment():
+def environ():
     return {
         "DB_DRIVERNAME": "mysql+pymysql",
-        "DB_USERNAME": "vuelax",
+        "DB_USERNAME": "VuelaX",
         "DB_PASSWORD": "Password1!",
         "DB_HOST": "localhost",
         "DB_PORT": "3366",
@@ -30,5 +30,5 @@ def test_get_connection_url():
         password="Password1!",
         port="3366",
         query={"charset": "utf8"},
-        username="vuelax",
+        username="VuelaX",
     )

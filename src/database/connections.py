@@ -17,7 +17,7 @@ db_env_vars = [
 
 def get_connection_url():
     arguments = {k[3:].lower(): os.environ[k] for k in db_env_vars}
-    return URL(**arguments, query={"charset": "utf8"})
+    return URL(**arguments)
 
 
 def get_engine():

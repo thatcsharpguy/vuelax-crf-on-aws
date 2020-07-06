@@ -4,15 +4,15 @@ import pytest
 
 
 @pytest.fixture
-def environment():
+def environ():
     return {}
 
 
 @pytest.fixture(autouse=True)
-def patch_env(environment):
+def patch_env(environ):
     def getenv(key, default=None):
-        return environment.get(key, default)
+        return environ.get(key, default)
 
-    with patch.dict(os.environ, environment):
+    with patch.dict(os.environ, environ, clear=True):
         with patch("os.getenv", getenv):
-            yield environment
+            yield environ
