@@ -17,12 +17,15 @@ tags = tagger.tag(offers)
 
 
 from sqlalchemy import create_engine
-engine = create_engine('sqlite:///:memory:', echo=True)
+
+engine = create_engine("sqlite:///:memory:", echo=True)
 
 Base.metadata.create_all(engine)
 
 from sqlalchemy.orm import sessionmaker
+
 Session = sessionmaker(bind=engine)
+
 
 @contextmanager
 def get_sess():
@@ -30,10 +33,13 @@ def get_sess():
     yield sess
     sess.commit()
 
+
 with get_sess() as sess:
-    sess.add(Offer(text = offers[0], **tags[0]))
+    sess.add(Offer(text=offers[0], **tags[0]))
 
 with get_sess() as sess:
     all = sess.query(Offer).all()
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
     pass

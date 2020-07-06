@@ -1,5 +1,6 @@
-from pathlib import Path
 import os
+from pathlib import Path
+
 from nltk import StanfordPOSTagger
 from sklearn.base import BaseEstimator, TransformerMixin
 

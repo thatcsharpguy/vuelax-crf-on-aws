@@ -3,16 +3,16 @@ from sklearn.pipeline import Pipeline
 
 from transformers import (
     AugmentTokens,
+    FeaturiseCRF,
     POSTagger,
+    Splitter,
     TextTransform,
+    Tokeniser,
     TokenLength,
     TokenListLength,
-    Splitter,
-    Tokeniser,
-    FeaturiseCRF,
 )
 from transformers.splitter import TupleJoin
-from transformers.utils import is_punctuation, is_numeric
+from transformers.utils import is_numeric, is_punctuation
 
 previous_next_pos = TupleJoin(
     [

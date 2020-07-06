@@ -13,6 +13,7 @@ models/stanford:
 	rm -rf $(STANFORD_MODEL) && rm $(STANFORD_MODEL).zip
 
 fmt:
+	$(PIPENV_RUN) isort src
 	$(PIPENV_RUN) black $(SOURCE_FILES)
 
 train:
