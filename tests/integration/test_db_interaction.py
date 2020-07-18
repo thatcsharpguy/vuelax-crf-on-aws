@@ -23,14 +23,7 @@ def environ(docker_ip, docker_services):
     }
 
 
-@pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig):
-    return os.path.join(
-        str(pytestconfig.rootdir), "tests", "docker", "integration-db.yml"
-    )
-
-
-@pytest.fixture(scope="session")
+@pytest.fixture
 def get_test_engine(docker_ip):
     connection_params = {
         "drivername": "mysql+pymysql",
@@ -46,7 +39,7 @@ def get_test_engine(docker_ip):
     return _get_test_engine
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def start_db(docker_ip, docker_services, get_test_engine):
     def is_responsive():
 
@@ -90,22 +83,29 @@ def test_execution(start_db, get_test_engine):
             "4,382",
             "¡CDMX a San José, Costa Rica $4,382! 🐸 (Por $1,987 agrega 4 noches de hotel con desayunos)",
         ),
+        (
+            4,
+            "GDL",
+            "a",
+            "Lima , Perú",
+            "3,685",
+            "¡GDL a Lima, Perú $3,685! 🇵🇪 (Por $2,004 agrega 4 noches de hotel c/ desayunos)\n",
+        ),
     ]
 
-    with patch(
-        "main.read_offers",
-        return_value=[
-            "¡CDMX a Santiago 🇨🇱 + Patagonia 🐧 $10,309!",
-            "¡CDMX a Ginebra, Suiza $13,832!",
-            "¡CDMX a San José, Costa Rica $4,382! 🐸 (Por $1,987 agrega 4 noches de hotel con desayunos)",
-        ],
-    ):
+    offers = [
+        "¡CDMX a Santiago 🇨🇱 + Patagonia 🐧 $10,309!",
+        "¡CDMX a Ginebra, Suiza $13,832!",
+        "¡CDMX a San José, Costa Rica $4,382! 🐸 (Por $1,987 agrega 4 noches de hotel con desayunos)",
+        "¡GDL a Lima, Perú $3,685! 🇵🇪 (Por $2,004 agrega 4 noches de hotel c/ desayunos)",
+    ]
 
-        execute()
-        engine = get_test_engine()
+    execute(offers)
 
-        actual_offers = engine.execute(
-            "SELECT id, origin, `separator`, destination, price, `text` FROM offers"
-        ).fetchall()
+    engine = get_test_engine()
 
-        assert actual_offers == expected
+    actual_offers = engine.execute(
+        "SELECT id, origin, `separator`, destination, price, `text` FROM offers"
+    ).fetchall()
+
+    assert actual_offers == expected

@@ -10,13 +10,16 @@ pytest = "*"
 pytest-docker = "*"
 
 [packages]
+boto3 = "*"
 cryptography = "*"
 nltk = "*"
 pymysql = "*"
 python-crfsuite = "*"
 scikit-learn = "*"
 sklearn-crfsuite = "*"
+smart-open = "*"
 sqlalchemy = "*"
+backoff = "*"
 
 [requires]
 python_version = "3.6"
