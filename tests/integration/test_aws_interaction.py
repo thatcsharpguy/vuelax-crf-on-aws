@@ -139,7 +139,7 @@ def test_run(
     setup_localstack, input_file, send_message, sqs_client, s3_client, upload_file
 ):
     with open(input_file) as fd:
-        expected_lines = fd.readlines()
+        expected_lines = [line.strip() for line in fd.readlines()]
     sent_body = upload_file(input_file)
     with patch("main.execute") as execute_patched:
         process_s3_message(sent_body)

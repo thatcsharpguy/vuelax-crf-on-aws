@@ -29,6 +29,5 @@ def test_get_connection_url():
         host="localhost",
         password="Password1!",
         port="3366",
-        query={"charset": "utf8"},
         username="VuelaX",
     )

@@ -14,6 +14,7 @@ from main import execute
 @pytest.fixture
 def environ(docker_ip, docker_services):
     return {
+        "JAVAHOME": os.getenv("JAVAHOME"),
         "DB_DRIVERNAME": "mysql+pymysql",
         "DB_USERNAME": "VuelaX",
         "DB_PASSWORD": "Password1!",
@@ -89,7 +90,7 @@ def test_execution(start_db, get_test_engine):
             "a",
             "Lima , Perú",
             "3,685",
-            "¡GDL a Lima, Perú $3,685! 🇵🇪 (Por $2,004 agrega 4 noches de hotel c/ desayunos)\n",
+            "¡GDL a Lima, Perú $3,685! 🇵🇪 (Por $2,004 agrega 4 noches de hotel c/ desayunos)",
         ),
     ]
 
