@@ -1,20 +1,20 @@
 import os
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 from sqlalchemy.exc import OperationalError
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
-from database.connections import get_engine
 from database.models.base import Base
-from main import execute
+from main import Service
 
 
 @pytest.fixture
 def environ(docker_ip, docker_services):
     return {
-        "JAVAHOME": os.getenv("JAVAHOME"),
+        "JAVA_HOME": os.getenv("JAVA_HOME"),
+        "QUEUE_NAME": "",
         "DB_DRIVERNAME": "mysql+pymysql",
         "DB_USERNAME": "VuelaX",
         "DB_PASSWORD": "Password1!",
@@ -101,7 +101,14 @@ def test_execution(start_db, get_test_engine):
         "¡GDL a Lima, Perú $3,685! 🇵🇪 (Por $2,004 agrega 4 noches de hotel c/ desayunos)",
     ]
 
-    execute(offers)
+    with patch.object(Service, "_get_queue_url"):
+        service = Service()
+    fake_s3_message = MagicMock()
+
+    with patch.object(service, "read_offers", return_value=offers) as read_offers_mock:
+        service.process_message(fake_s3_message)
+
+        read_offers_mock.assert_called_once_with(fake_s3_message)
 
     engine = get_test_engine()
 

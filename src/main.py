@@ -11,65 +11,83 @@ from local_boto import client
 from tagger import Tagger
 
 
-def read_offers(file):
-    s3_client = client("s3")
-    with smart_open(
-        file,
-        "r",
-        transport_params={
-            "resource_kwargs": {"endpoint_url": s3_client.meta.endpoint_url},
-        },
-    ) as external:
-        return [line.strip() for line in external]
+class Service:
+    def __init__(self):
+        self.sqs_client = client("sqs")
+        self.s3_client = client("s3")
+        self.queue_url = self._get_queue_url(os.environ["QUEUE_NAME"])
+        self.tagger = Tagger("vuelax.pkl")
 
+    @backoff.on_exception(backoff.expo, exception=Exception)
+    def _get_queue_url(self, queue_name):
+        """
+        Get the queue url for a given queue name.
+        This method has `backoff` enabled so that it does not fail right away if the queue does not exist.
+        :param queue_name:
+        :return:
+        """
+        return self.sqs_client.get_queue_url(QueueName=queue_name)["QueueUrl"]
 
-def store_offers(offers, predicted_labels):
-    with get_session() as session:
-        for offer, labels in zip(offers, predicted_labels):
-            session.add(Offer(text=offer, **labels))
-
-
-@backoff.on_exception(backoff.expo, exception=Exception)
-def get_queue_url(sqs_client, queue_name):
-    return sqs_client.get_queue_url(QueueName=queue_name)["QueueUrl"]
-
-
-def run():
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger()
-    logger.info("starting service")
-    while True:
-        try:
-            logger.info("starting service")
-            queue_name = os.environ["QUEUE_NAME"]
-            sqs_client = client("sqs")
-            queue_url = get_queue_url(sqs_client, queue_name)
-            response = sqs_client.receive_message(
-                QueueUrl=queue_url, WaitTimeSeconds=20
+    def run(self):
+        """
+        Reads constantly from an SQS queue polling from messages to be processed
+        """
+        while True:
+            response = self.sqs_client.receive_message(
+                QueueUrl=self.queue_url, WaitTimeSeconds=20
             )
             for message in response.get("Messages", list()):
                 s3_message = json.loads(message["Body"])
-                process_s3_message(s3_message)
-                sqs_client.delete_message(
-                    QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"]
+                self.process_message(s3_message)
+                self.sqs_client.delete_message(
+                    QueueUrl=self.queue_url, ReceiptHandle=message["ReceiptHandle"]
                 )
-        except Exception as e:
-            logger.exception("bad!")
 
+    def store_offers(self, offers, predicted_labels):
+        """
+        Save the tagged offers in the database
+        :param offers: A list of strings, where each string is an offer
+        :param predicted_labels: A list of tags corresponding to each offer in :offers:
+        """
+        with get_session() as session:
+            for offer, labels in zip(offers, predicted_labels):
+                session.add(Offer(text=offer, **labels))
 
-def process_s3_message(s3_message):
-    for record in s3_message["Records"]:
-        bucket = record["s3"]["bucket"]["name"]
-        key = record["s3"]["object"]["key"]
-        offers = read_offers(f"s3://{bucket}/{key}")
-        execute(offers)
+    def read_offers(self, s3_message):
+        """
+        Reads offers from an s3 file
+        :param bucket:
+        :param key:
+        :return: The lines inside the file
+        """
+        offers_in_file = []
 
+        for record in s3_message["Records"]:
+            bucket = record["s3"]["bucket"]["name"]
+            key = record["s3"]["object"]["key"]
+            with smart_open(
+                f"s3://{bucket}/{key}",
+                "r",
+                transport_params={
+                    "resource_kwargs": {
+                        "endpoint_url": self.s3_client.meta.endpoint_url
+                    },
+                },
+            ) as external:
+                offers_in_file.extend([line.strip() for line in external])
 
-def execute(offers):
-    tagger = Tagger("vuelax.pkl")
-    predicted_labels = tagger.tag(offers)
-    store_offers(offers, predicted_labels)
+        return offers_in_file
+
+    def process_message(self, s3_message):
+        """
+        Process an s3 message by reading the file to be processed from s3, tagging the offers and then storing them in the database
+        :param s3_message:
+        """
+        offers = self.read_offers(s3_message)
+        predicted_labels = self.tagger.tag(offers)
+        self.store_offers(offers, predicted_labels)
 
 
 if __name__ == "__main__":
-    run()
+    service = Service()
+    service.run()

@@ -6,7 +6,8 @@ from unittest.mock import patch
 import boto3
 import pytest
 
-from main import run, process_s3_message
+from main import Service
+
 from datetime import datetime
 
 
@@ -28,6 +29,7 @@ def localstack_endpoint(docker_ip):
 @pytest.fixture
 def environ(localstack_endpoint, queue_name):
     return {
+        "JAVA_HOME": os.getenv("JAVA_HOME"),
         "QUEUE_NAME": queue_name,
         "AWS_ACCESS_KEY_ID": "test",
         "AWS_DEFAULT_REGION": "eu-west-2",
@@ -138,10 +140,49 @@ def input_file(pytestconfig):
 def test_run(
     setup_localstack, input_file, send_message, sqs_client, s3_client, upload_file
 ):
+    expected_offers = [
+        "¡CDMX a Santiago 🇨🇱 + Patagonia 🐧 $10,309!",
+        "¡CDMX a Ginebra, Suiza $13,832!",
+        "¡CDMX a San José, Costa Rica $4,382! 🐸 (Por $1,987 agrega 4 noches de hotel con desayunos)",
+        "¡GDL a Lima, Perú $3,685! 🇵🇪 (Por $2,004 agrega 4 noches de hotel c/ desayunos)",
+    ]
+    expected_tags = [
+        {
+            "irrelevant": "¡ $ !",
+            "origin": "CDMX",
+            "separator": "a",
+            "destination": "Santiago 🇨🇱 + Patagonia",
+            "price": "10,309",
+        },
+        {
+            "irrelevant": "¡ $ !",
+            "origin": "CDMX",
+            "separator": "a",
+            "destination": "Ginebra , Suiza",
+            "price": "13,832",
+        },
+        {
+            "irrelevant": "¡ $ ! ( Por $ 1,987 agrega 4 noches de hotel con desayunos )",
+            "origin": "CDMX",
+            "separator": "a",
+            "destination": "San José , Costa Rica",
+            "price": "4,382",
+        },
+        {
+            "irrelevant": "¡ $ ! 🇵🇪 ( Por $ 2,004 agrega 4 noches de hotel c / desayunos )",
+            "origin": "GDL",
+            "separator": "a",
+            "destination": "Lima , Perú",
+            "price": "3,685",
+        },
+    ]
+
     with open(input_file) as fd:
         expected_lines = [line.strip() for line in fd.readlines()]
     sent_body = upload_file(input_file)
-    with patch("main.execute") as execute_patched:
-        process_s3_message(sent_body)
 
-        execute_patched.assert_called_once_with(expected_lines)
+    service = Service()
+
+    with patch.object(service, "store_offers") as store_offers_mock:
+        service.process_message(sent_body)
+        store_offers_mock.assert_called_once_with(expected_offers, expected_tags)
