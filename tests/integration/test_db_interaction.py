@@ -57,8 +57,8 @@ def start_db(docker_ip, docker_services, get_test_engine):
 
     Base.metadata.create_all(engine)
 
-
-def test_execution(start_db, get_test_engine):
+@patch("main.client")
+def test_execution(patched_boto_client, start_db, get_test_engine):
     expected = [
         (
             1,
